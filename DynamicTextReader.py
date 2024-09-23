@@ -10,7 +10,7 @@ cam.set(4, 640)
 cam.set(10, 100)
 
 # Initialize face mesh detector
-detector = FaceMeshDetector(maxFaces=1)
+detector = FaceMeshDetector(maxFaces=2)
 
 # Texts to display
 texts = [
@@ -34,7 +34,7 @@ while True:
         right = face[374]
         W = 6.3  # Average distance between eyes (in cm)
         w, _, _ = detector.findDistance(right, left, img)
-        f = 132.28346456692915  # Focal length
+        f = 1037  # Focal length
 
         d = (W * f) / w  # Calculate distance
         cvzone.putTextRect(
