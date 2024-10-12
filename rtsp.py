@@ -4,12 +4,14 @@ from cvzone.FaceMeshModule import FaceMeshDetector
 import numpy as np
 
 rtsp_url = "rtsp://admin:123456789tung@192.168.0.110:554/ch1/main"
+rtmp_url = "rtmp://62.146.236.233/live/Ancam1"
+
 # Initialize webcam
 cam = cv2.VideoCapture(rtsp_url)
 
 # Initialize face mesh detector
 # Tăng maxFaces để nhận diện nhiều khuôn mặt hơn
-detector = FaceMeshDetector(maxFaces=5)
+detector = FaceMeshDetector(maxFaces=1)
 
 # Texts to display
 texts = [
