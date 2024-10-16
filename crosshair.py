@@ -3,26 +3,17 @@ import cvzone
 from cvzone.FaceMeshModule import FaceMeshDetector
 import numpy as np
 import time
-from pymodbus.client import ModbusTcpClient
 
 rtsp_url = "rtsp://admin:123456789tung@192.168.0.110:554/ch1/main"
 
 # Initialize webcam
-cam = cv2.VideoCapture(0)
+cam = cv2.VideoCapture(rtsp_url)
 
 # Initialize face mesh detector
 detector = FaceMeshDetector(maxFaces=1)
 
 # Thời gian để tính FPS
 prev_time = 0
-
-# Kết nối đến PLC
-client = ModbusTcpClient('169.254.21.193', port=502)  # Đặt IP của PLC
-client.connect()
-
-# Địa chỉ cho x và y trong PLC
-address_x = 0  # Địa chỉ register cho x
-address_y = 1  # Địa chỉ register cho y
 
 # Main loop
 while True:
@@ -46,20 +37,26 @@ while True:
             y_min = min(y_coords)
             y_max = max(y_coords)
 
-            # Vẽ bounding box
-            cv2.rectangle(img, (x_min, y_min), (x_max, y_max), (0, 255, 0), 2)
-
             # Tính toán tọa độ trung tâm
             center_x = int((x_min + x_max) / 2)
             center_y = int((y_min + y_max) / 2)
 
-            # Vẽ điểm trung tâm
-            cv2.circle(img, (center_x, center_y), 5,
-                       (0, 0, 255), -1)  # Điểm trung tâm màu đỏ
+            # Vẽ vòng tròn quanh khuôn mặt
+            cv2.circle(img, (center_x, center_y), 80,
+                       (0, 0, 255), 2)  # Vòng tròn lớn
+            # Vòng tròn nhỏ bên trong
+            cv2.circle(img, (center_x, center_y), 15, (0, 0, 255), -1)
 
-            # Gửi tọa độ vào PLC
-            client.write_register(address_x, center_x)  # Gửi tọa độ x
-            client.write_register(address_y, center_y)  # Gửi tọa độ y
+            # Vẽ văn bản hiển thị tọa độ trung tâm
+            cv2.putText(img, f"Center: ({center_x}, {center_y})",
+                        (center_x + 15, center_y - 15),
+                        cv2.FONT_HERSHEY_PLAIN, 1, (255, 0, 0), 2)
+
+            # Vẽ các đường thẳng theo trục x và y
+            cv2.line(img, (0, center_y), (640, center_y),
+                     (0, 0, 0), 2)  # Đường x
+            cv2.line(img, (center_x, 0), (center_x, 480),
+                     (0, 0, 0), 2)  # Đường y
 
             # Log tọa độ của điểm chính giữa
             print(f'Center Coordinates: ({center_x}, {center_y})')
@@ -79,7 +76,5 @@ while True:
     if cv2.waitKey(1) & 0xFF == ord('q'):
         break
 
-# Đóng kết nối và giải phóng webcam
-client.close()
 cam.release()
 cv2.destroyAllWindows()
