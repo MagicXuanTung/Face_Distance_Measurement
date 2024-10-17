@@ -6,16 +6,19 @@ from ultralytics import YOLO
 rtsp_url = "rtsp://admin:123456789tung@192.168.0.110:554/ch1/main"
 
 # Initialize webcam or RTSP stream
-cam = cv2.VideoCapture(0)
+cam = cv2.VideoCapture(rtsp_url)
 
 # Load YOLOv8 face detection model
+# cuda for GPU
+# cpu for CPU
 model = YOLO(
-    r"C:\Users\magic\Desktop\ĐỒ ÁN TỐT NGHIỆP\Face_Distance_Measurement\yolov8n-face.pt").to('cpu')
+    r"C:\Users\magic\Desktop\ĐỒ ÁN TỐT NGHIỆP\Face_Distance_Measurement\yolov8n-face.pt").to('cuda')
 
 # Thời gian để tính FPS
 prev_time = 0
 
-max_fps = 60
+# Optional: Giới hạn FPS để giảm tải (giới hạn tối đa 15 FPS)
+max_fps = 100
 min_time_between_frames = 1.0 / max_fps
 
 # Main loop
@@ -43,7 +46,9 @@ while True:
         # Tính toán tọa độ trung tâm
         center_x = int((x_min + x_max) / 2)
         center_y = int((y_min + y_max) / 2)
-
+        cv2.putText(frame, f"Center: ({center_x}, {center_y})",
+                    (center_x + 15, center_y - 15),
+                    cv2.FONT_HERSHEY_PLAIN, 1, (255, 0, 0), 2)
         # Vẽ bounding box và trung tâm
         cv2.circle(frame, (center_x, center_y), 35, (0, 0, 255), 2)
         cv2.circle(frame, (center_x, center_y), 10, (0, 0, 255), -1)
