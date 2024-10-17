@@ -18,7 +18,7 @@ model = YOLO(
 prev_time = 0
 
 # Optional: Giới hạn FPS để giảm tải (giới hạn tối đa 15 FPS)
-max_fps = 100
+max_fps = 60
 min_time_between_frames = 1.0 / max_fps
 
 # Main loop
@@ -49,6 +49,7 @@ while True:
         cv2.putText(frame, f"Center: ({center_x}, {center_y})",
                     (center_x + 15, center_y - 15),
                     cv2.FONT_HERSHEY_PLAIN, 1, (255, 0, 0), 2)
+        cv2.rectangle(frame, (x_min, y_min), (x_max, y_max), (0, 255, 0), 2)
         # Vẽ bounding box và trung tâm
         cv2.circle(frame, (center_x, center_y), 35, (0, 0, 255), 2)
         cv2.circle(frame, (center_x, center_y), 10, (0, 0, 255), -1)
