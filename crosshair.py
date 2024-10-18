@@ -1,5 +1,4 @@
 import cv2
-import cvzone
 from cvzone.FaceMeshModule import FaceMeshDetector
 import numpy as np
 import time
