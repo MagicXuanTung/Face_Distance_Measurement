@@ -1,0 +1,31 @@
+
+ 1. Kết nối và ngắt kết nối
+   - Client(url).connect(): Kết nối đến OPC UA Server.
+   - Client(url).disconnect(): Ngắt kết nối khỏi OPC UA Server.
+
+ 2. Truy xuất Node (Thanh ghi)
+   - client.get_node(node_id): Truy xuất một node cụ thể trong PLC bằng ID, ví dụ "ns=2;s=Channel1.Device1.X0" cho X0.
+
+ 3. Đọc Dữ Liệu
+   - node.get_value(): Đọc giá trị hiện tại từ một node.
+   - client.read_value(node_id): Đọc giá trị từ node_id mà không cần tạo đối tượng node.
+
+ 4. Ghi Dữ Liệu
+   - node.set_value(ua.DataValue(ua.Variant(value, ua.VariantType))): Ghi dữ liệu vào một node. Với value là giá trị cần ghi, và VariantType là kiểu dữ liệu (ví dụ, Boolean, Int16, Float).
+   
+ 5. Đọc và Ghi Dữ Liệu Đồng Thời
+   - client.write_value(node_id, value): Ghi value trực tiếp vào node có node_id.
+
+ 6. Thông tin về Node
+   - node.get_display_name(): Lấy tên hiển thị của node.
+   - node.get_data_type(): Kiểm tra loại dữ liệu của node.
+   - node.read_attributes(): Đọc các thuộc tính của node, như quyền đọc/ghi và loại dữ liệu.
+
+ 7. Quản lý Session và Thời gian chờ
+   - client.session_timeout: Kiểm tra thời gian chờ của session.
+   - client.set_session_timeout(timeout): Cài đặt thời gian chờ (tính bằng mili-giây) cho phiên làm việc.
+
+ 8. Giám sát Dữ Liệu (Subscription)
+   - client.create_subscription(period, handler): Tạo một Subscription để giám sát dữ liệu theo period (thời gian lặp) với handler là lớp xử lý sự kiện.
+   - subscription.subscribe_data_change(node): Giám sát thay đổi dữ liệu của một node cụ thể.
+

@@ -1,22 +1,17 @@
 import cv2
 import time
-from pymodbus.client import ModbusTcpClient
 from ultralytics import YOLO
 
-# Kết nối với PLC qua Modbus TCP
-# Địa chỉ IP và cổng của PLC
-plc_client = ModbusTcpClient('192.168.0.110', port=502)
-plc_client.connect()
 
 # RTSP stream URL
 rtsp_url = "rtsp://admin:123456789tung@192.168.0.110:554/ch1/main"
 
 # Initialize webcam or RTSP stream
-cam = cv2.VideoCapture(0)
+cam = cv2.VideoCapture(rtsp_url)
 
 # Load YOLOv8 face detection model
 model = YOLO(
-    r"C:\Users\magic\Desktop\ĐỒ ÁN TỐT NGHIỆP\Face_Distance_Measurement\yolov8n-face.pt").to('cuda')
+    r"C:\Users\magic\Desktop\ĐỒ ÁN TỐT NGHIỆP\Face_Distance_Measurement\yolov8_face_detect\yolo_face.py").to('cuda')
 
 # Thời gian để tính FPS
 prev_time = 0
@@ -39,10 +34,6 @@ while True:
         x_min, y_min, x_max, y_max = map(int, box.xyxy[0])
         center_x = int((x_min + x_max) / 2)
         center_y = int((y_min + y_max) / 2)
-
-        # Gửi tọa độ center_x và center_y tới PLC (giả sử sử dụng thanh ghi D0 và D1)
-        plc_client.write_register(0, center_x)  # Ghi vào D0
-        plc_client.write_register(1, center_y)  # Ghi vào D1
 
         print(f'Center Coordinates: ({center_x}, {center_y})')
         cv2.circle(frame, (center_x, center_y), 60, (0, 0, 255), 2)
@@ -67,8 +58,3 @@ while True:
 
     if cv2.waitKey(1) & 0xFF == ord('q'):
         break
-
-# Ngắt kết nối với PLC
-plc_client.close()
-cam.release()
-cv2.destroyAllWindows()

@@ -6,3 +6,8 @@ mediapipe
 ultralytics
 torch
 
+# python connect  OPCUA  from KepServerEX6
+opcua #(OLE for Process Control Unified Architecture)
+cryptography  # hash functions like SHA-256, SHA-1,
+
+
