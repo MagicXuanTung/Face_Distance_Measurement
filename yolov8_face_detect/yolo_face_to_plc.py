@@ -1,7 +1,19 @@
 import cv2
 import time
 from ultralytics import YOLO
+from opcua import Client, ua
 
+# Địa chỉ OPC UA của Kepware
+url = "opc.tcp://127.0.0.1:49320"
+client = Client(url)
+
+# Kết nối đến máy chủ
+client.connect()
+print("Connected to Kepware OPC UA Server")
+
+# Lấy node D1 và D3 để thực hiện ghi giá trị
+d1_node = client.get_node("ns=2;s=Channel1.Device1.D1")
+d3_node = client.get_node("ns=2;s=Channel1.Device1.D3")
 
 # RTSP stream URL
 rtsp_url = "rtsp://admin:123456789tung@192.168.0.110:554/ch1/main"
@@ -12,7 +24,6 @@ cam = cv2.VideoCapture(rtsp_url)
 # Load YOLOv8 face detection model
 model = YOLO(
     r"C:\Users\magic\Desktop\ĐỒ ÁN TỐT NGHIỆP\Face_Distance_Measurement\yolov8_face_detect\yolov8n-face.pt").to('cuda')
-
 
 # Thời gian để tính FPS
 prev_time = 0
@@ -37,6 +48,13 @@ while True:
         center_y = int((y_min + y_max) / 2)
 
         print(f'Center Coordinates: ({center_x}, {center_y})')
+
+        # Ghi tọa độ vào D1 và D3
+        d1_node.set_value(ua.DataValue(
+            ua.Variant(center_x, ua.VariantType.DataValue)))
+        d3_node.set_value(ua.DataValue(
+            ua.Variant(center_y, ua.VariantType.DataValue)))
+
         cv2.circle(frame, (center_x, center_y), 60, (0, 0, 255), 2)
         cv2.circle(frame, (center_x, center_y), 15, (0, 0, 255), -1)
         cv2.line(frame, (0, center_y), (1280, center_y), (0, 0, 0), 2)
@@ -59,3 +77,8 @@ while True:
 
     if cv2.waitKey(1) & 0xFF == ord('q'):
         break
+
+# Đóng kết nối và giải phóng tài nguyên
+client.disconnect()
+cam.release()
+cv2.destroyAllWindows()
