@@ -51,9 +51,9 @@ while True:
 
         # Ghi tọa độ vào D1 và D3
         d1_node.set_value(ua.DataValue(
-            ua.Variant(center_x, ua.VariantType.DataValue)))
+            ua.Variant(center_x, ua.VariantType.UInt16)))
         d3_node.set_value(ua.DataValue(
-            ua.Variant(center_y, ua.VariantType.DataValue)))
+            ua.Variant(center_y, ua.VariantType.UInt16)))
 
         cv2.circle(frame, (center_x, center_y), 60, (0, 0, 255), 2)
         cv2.circle(frame, (center_x, center_y), 15, (0, 0, 255), -1)
