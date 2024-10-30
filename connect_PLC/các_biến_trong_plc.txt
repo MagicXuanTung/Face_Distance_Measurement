@@ -1,0 +1,20 @@
+Mô hình FX5UC-32MT-D là một bộ điều khiển lập trình PLC (Programmable Logic Controller) của Mitsubishi. Dưới đây là thông tin về các giá trị thanh ghi và bộ nhớ cơ bản của nó:
+
+ 1. Các thanh ghi:
+- D Register (D): Dùng để lưu trữ dữ liệu và có thể được sử dụng trong các phép toán.
+- M Register (M): Dùng để lưu trữ trạng thái của các bit điều khiển (các bit nhớ).
+- X Register (X): Dùng cho đầu vào (input) của các thiết bị.
+- Y Register (Y): Dùng cho đầu ra (output) của các thiết bị.
+- T Register (T): Dùng cho bộ đếm thời gian.
+- C Register (C): Dùng cho bộ đếm.
+
+ 2. Bộ nhớ:
+- Bộ nhớ chương trình: Lưu trữ mã lệnh lập trình.
+- Bộ nhớ dữ liệu: Lưu trữ các giá trị của các thanh ghi như D, M, X, Y.
+
+ 3. Đặc điểm kỹ thuật:
+- Số lượng đầu vào: Tùy thuộc vào cấu hình (có thể lên đến 32 điểm).
+- Số lượng đầu ra: Tương tự, có thể lên đến 32 điểm.
+- Bộ nhớ dữ liệu: Có thể thay đổi tùy theo kiểu mô hình và cấu hình.
+
+Nếu bạn cần thông tin chi tiết hơn hoặc cụ thể về cách sử dụng, hãy cho tôi biết nhé!
