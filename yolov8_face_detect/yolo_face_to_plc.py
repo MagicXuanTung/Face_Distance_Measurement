@@ -16,7 +16,9 @@ except Exception as e:
     exit()
 
 # Lấy node D2, D4, M0, M1 để thực hiện ghi giá trị
+D1_node = client.get_node("ns=2;s=Channel1.Device1.D1")
 D2_node = client.get_node("ns=2;s=Channel1.Device1.D2")
+D3_node = client.get_node("ns=2;s=Channel1.Device1.D3")
 D4_node = client.get_node("ns=2;s=Channel1.Device1.D4")
 M0_node = client.get_node("ns=2;s=Channel1.Device1.M0")
 M1_node = client.get_node("ns=2;s=Channel1.Device1.M1")
@@ -58,11 +60,15 @@ while True:
                 ua.Variant(True, ua.VariantType.Boolean)))
             D2_node.set_value(ua.DataValue(
                 ua.Variant(center_x, ua.VariantType.UInt16)))
+            D1_node.set_value(ua.DataValue(
+                ua.Variant(400, ua.VariantType.UInt16)))
             # trục 2
             M1_node.set_value(ua.DataValue(
                 ua.Variant(True, ua.VariantType.Boolean)))
             D4_node.set_value(ua.DataValue(
                 ua.Variant(center_y, ua.VariantType.UInt16)))
+            D3_node.set_value(ua.DataValue(
+                ua.Variant(400, ua.VariantType.UInt16)))
         except Exception as e:
             print(f"Failed to write to OPC UA nodes: {e}")
 
