@@ -15,13 +15,17 @@ except Exception as e:
     print(f"Failed to connect to OPC UA Server: {e}")
     exit()
 
-# Lấy node D1, D2, D3, D4, M0, M1 để thực hiện ghi giá trị
+# Lấy node D1, D2, D3, D4 để thực hiện ghi giá trị
 D1_node = client.get_node("ns=2;s=Channel1.Device1.D1")
 D2_node = client.get_node("ns=2;s=Channel1.Device1.D2")
 D3_node = client.get_node("ns=2;s=Channel1.Device1.D3")
 D4_node = client.get_node("ns=2;s=Channel1.Device1.D4")
-M0_node = client.get_node("ns=2;s=Channel1.Device1.M0")
-M1_node = client.get_node("ns=2;s=Channel1.Device1.M1")
+
+try:
+    D1_node.set_value(ua.DataValue(ua.Variant(6400, ua.VariantType.UInt16)))
+    D3_node.set_value(ua.DataValue(ua.Variant(6400, ua.VariantType.UInt16)))
+except Exception as e:
+    print(f"Failed to set value for D1 and D3: {e}")
 
 # RTSP stream URL
 rtsp_url = "rtsp://admin:123456789tung@192.168.0.110:554/ch1/main"
@@ -46,56 +50,46 @@ while True:
     frame = cv2.resize(frame, (800, 600))
     results = model(frame, verbose=False)
 
-    try:
-        # Set fixed values for D1 and D3
-        D1_node.set_value(ua.DataValue(ua.Variant(400, ua.VariantType.UInt16)))
-        D3_node.set_value(ua.DataValue(ua.Variant(400, ua.VariantType.UInt16)))
+    if results and len(results[0].boxes) > 0:
+        box = results[0].boxes[0]
+        x_min, y_min, x_max, y_max = map(int, box.xyxy[0])
+        center_x = int((x_min + x_max) / 2)*10
+        center_y = int((y_min + y_max) / 2)*10
 
-        if results and len(results[0].boxes) > 0:
-            box = results[0].boxes[0]
-            x_min, y_min, x_max, y_max = map(int, box.xyxy[0])
-            center_x = int((x_min + x_max) / 2)
-            center_y = int((y_min + y_max) / 2)
+        # Nhân tọa độ với 10 trước khi ghi vào D2 và D4
+        D2_node.set_value(ua.DataValue(ua.Variant(
+            center_x, ua.VariantType.UInt16)))
+        D4_node.set_value(ua.DataValue(ua.Variant(
+            center_y, ua.VariantType.UInt16)))
 
-            print(f'Center Coordinates: ({center_x}, {center_y})')
+        print(f'Center Coordinates: ({center_x}, {center_y})')
 
-            # Ghi giá trị cho D2 và D4
-            D2_node.set_value(ua.DataValue(
-                ua.Variant(center_x, ua.VariantType.UInt16)))
-            M0_node.set_value(ua.DataValue(
-                ua.Variant(True, ua.VariantType.Boolean)))
-            M1_node.set_value(ua.DataValue(
-                ua.Variant(True, ua.VariantType.Boolean)))
-            D4_node.set_value(ua.DataValue(
-                ua.Variant(center_y, ua.VariantType.UInt16)))
+        cv2.line(frame, (0, center_y), (800, center_y), (0, 0, 0), 2)
+        cv2.line(frame, (center_x, 0), (center_x, 600), (0, 0, 0), 2)
+        cv2.circle(frame, (center_x, center_y), 60, (0, 0, 255), 2)
+        cv2.circle(frame, (center_x, center_y), 15, (0, 0, 255), -1)
 
-            cv2.circle(frame, (center_x, center_y), 60, (0, 0, 255), 2)
-            cv2.circle(frame, (center_x, center_y), 15, (0, 0, 255), -1)
-            cv2.line(frame, (0, center_y), (800, center_y), (0, 0, 0), 2)
-            cv2.line(frame, (center_x, 0), (center_x, 600), (0, 0, 0), 2)
-        else:
-            # Khi không có nhận diện khuôn mặt, vẽ ở trung tâm mặc định và đặt các giá trị về 0
-            default_center_x, default_center_y = 400, 300
-            cv2.circle(frame, (default_center_x, default_center_y),
-                       60, (0, 0, 255), 2)
-            cv2.circle(frame, (default_center_x, default_center_y),
-                       15, (0, 0, 255), -1)
-            cv2.line(frame, (0, default_center_y),
-                     (800, default_center_y), (0, 0, 0), 2)
-            cv2.line(frame, (default_center_x, 0),
-                     (default_center_x, 600), (0, 0, 0), 2)
+        # Hiển thị tọa độ center_x và center_y
+        cv2.putText(frame, f'Center: ({center_x}, {center_y})',
+                    (center_x + 10, center_y - 10),
+                    cv2.FONT_HERSHEY_SIMPLEX, 0.6, (255, 0, 0), 2)
 
-            # Đặt các giá trị về 0
-            M0_node.set_value(ua.DataValue(
-                ua.Variant(False, ua.VariantType.Boolean)))
-            M1_node.set_value(ua.DataValue(
-                ua.Variant(False, ua.VariantType.Boolean)))
-            D2_node.set_value(ua.DataValue(
-                ua.Variant(0, ua.VariantType.UInt16)))
-            D4_node.set_value(ua.DataValue(
-                ua.Variant(0, ua.VariantType.UInt16)))
-    except Exception as e:
-        print(f"Failed to write to OPC UA nodes: {e}")
+    else:
+        # Khi không có nhận diện khuôn mặt, vẽ ở trung tâm mặc định và đặt các giá trị về 0
+        default_center_x, default_center_y = 400, 300
+
+        cv2.line(frame, (0, default_center_y),
+                 (800, default_center_y), (0, 0, 0), 2)
+        cv2.line(frame, (default_center_x, 0),
+                 (default_center_x, 600), (0, 0, 0), 2)
+        cv2.circle(frame, (default_center_x, default_center_y),
+                   60, (0, 0, 255), 2)
+        cv2.circle(frame, (default_center_x, default_center_y),
+                   15, (0, 0, 255), -1)
+
+        # Đặt các giá trị về 0
+        D2_node.set_value(ua.DataValue(ua.Variant(0, ua.VariantType.UInt16)))
+        D4_node.set_value(ua.DataValue(ua.Variant(0, ua.VariantType.UInt16)))
 
     current_time = time.time()
     elapsed_time = current_time - prev_time

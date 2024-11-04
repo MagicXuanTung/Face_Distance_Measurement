@@ -22,17 +22,17 @@ M0_node = client.get_node("ns=2;s=Channel1.Device1.M0")
 M1_node = client.get_node("ns=2;s=Channel1.Device1.M1")
 
 # Đặt giá trị cố định cho D1 và D3
-D1_value = 400  # Thay đổi giá trị theo nhu cầu
-D3_value = 400  # Thay đổi giá trị theo nhu cầu
+# D1_value = 400  # Thay đổi giá trị theo nhu cầu
+# D3_value = 400  # Thay đổi giá trị theo nhu cầu
 
 # Ghi giá trị cố định cho D1 và D3
-try:
-    D1_node = client.get_node("ns=2;s=Channel1.Device1.D1")
-    D3_node = client.get_node("ns=2;s=Channel1.Device1.D3")
-    D1_node.set_value(ua.DataValue(ua.Variant(D1_value, ua.VariantType.Int32)))
-    D3_node.set_value(ua.DataValue(ua.Variant(D3_value, ua.VariantType.Int32)))
-except Exception as e:
-    print(f"Failed to set fixed values for D1 and D3: {e}")
+# try:
+#     D1_node = client.get_node("ns=2;s=Channel1.Device1.D1")
+#     D3_node = client.get_node("ns=2;s=Channel1.Device1.D3")
+#     D1_node.set_value(ua.DataValue(ua.Variant(D1_value, ua.VariantType.Int32)))
+#     D3_node.set_value(ua.DataValue(ua.Variant(D3_value, ua.VariantType.Int32)))
+# except Exception as e:
+#     print(f"Failed to set fixed values for D1 and D3: {e}")
 
 # RTSP stream URL
 rtsp_url = "rtsp://admin:123456789tung@192.168.0.110:554/ch1/main"
@@ -81,9 +81,9 @@ while True:
         adjusted_center_x = center_x - (width // 2)
         adjusted_center_y = (height // 2) - center_y
 
-        # Kiểm tra và đặt giá trị âm
-        adjusted_center_x = adjusted_center_x if adjusted_center_x != 0 else -1
-        adjusted_center_y = adjusted_center_y if adjusted_center_y != 0 else -1
+        # # Kiểm tra và đặt giá trị âm
+        # adjusted_center_x = adjusted_center_x if adjusted_center_x != 0 else -1
+        # adjusted_center_y = adjusted_center_y if adjusted_center_y != 0 else -1
 
         print(
             f'Adjusted Center Coordinates: ({adjusted_center_x}, {adjusted_center_y})')
