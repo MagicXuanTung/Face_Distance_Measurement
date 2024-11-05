@@ -15,18 +15,18 @@ except Exception as e:
     print(f"Failed to connect to OPC UA Server: {e}")
     exit()
 
-# Lấy node D1, D2, D3, D4 để thực hiện ghi giá trị
+# Lấy node D1, D2, D5, D4 để thực hiện ghi giá trị
 D1_node = client.get_node("ns=2;s=Channel1.Device1.D1")
 D2_node = client.get_node("ns=2;s=Channel1.Device1.D2")
-D3_node = client.get_node("ns=2;s=Channel1.Device1.D3")
 D4_node = client.get_node("ns=2;s=Channel1.Device1.D4")
+D5_node = client.get_node("ns=2;s=Channel1.Device1.D5")
 
-# Set giá trị cho D1 và D3 là 6400
+# Set giá trị cho D1 và D5 là 6400
 try:
+    D5_node.set_value(ua.DataValue(ua.Variant(6400, ua.VariantType.UInt16)))
     D1_node.set_value(ua.DataValue(ua.Variant(6400, ua.VariantType.UInt16)))
-    D3_node.set_value(ua.DataValue(ua.Variant(6400, ua.VariantType.UInt16)))
 except Exception as e:
-    print(f"Failed to set value for D1 and D3: {e}")
+    print(f"Failed to set value for D1 and D5: {e}")
 
 # RTSP stream URL
 rtsp_url = "rtsp://admin:123456789tung@192.168.0.110:554/ch1/main"
@@ -72,6 +72,10 @@ while True:
         opc_center_x = clamp(center_x * 100)
         opc_center_y = clamp(center_y * 100)
 
+        # Log tọa độ trung tâm khuôn mặt
+        print(f"Tọa độ pixel trung tâm khuôn mặt: ({center_x}, {center_y})")
+        print(f"Tọa độ gửi qua OPC UA: ({opc_center_x}, {opc_center_y})")
+
         # Ghi giá trị vào các node OPC UA
         D2_node.set_value(ua.DataValue(ua.Variant(
             opc_center_x, ua.VariantType.UInt16)))
@@ -81,13 +85,16 @@ while True:
         # Hiển thị tọa độ trung tâm khuôn mặt
         cv2.putText(frame, f'Center: ({opc_center_x}, {opc_center_y})', (center_x + 10, center_y - 10),
                     cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 255, 0), 2)
-
     else:
         # Nếu không phát hiện khuôn mặt, vẽ các đường và hình tròn ở giữa màn hình
         opc_center_x = clamp(center_x * 100)
         opc_center_y = clamp(center_y * 100)
 
-        # Ghi giá trị vào các node OPC UA (có thể tùy chỉnh theo yêu cầu)
+        # Log tọa độ khi không phát hiện khuôn mặt
+        print(f"Tọa độ trung tâm màn hình: ({center_x}, {center_y})")
+        print(f"Tọa độ gửi qua OPC UA: ({opc_center_x}, {opc_center_y})")
+
+        # Ghi giá trị vào các node OPC UA
         D2_node.set_value(ua.DataValue(ua.Variant(
             opc_center_x, ua.VariantType.UInt16)))
         D4_node.set_value(ua.DataValue(ua.Variant(
