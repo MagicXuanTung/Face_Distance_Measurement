@@ -7,27 +7,27 @@ import tkinter as tk
 from tkinter import messagebox, filedialog  # Thêm filedialog
 
 # --------------------------- Kết nối OPC UA ---------------------------
-url = "opc.tcp://127.0.0.1:49320"
-client = Client(url)
+# url = "opc.tcp://127.0.0.1:49320"
+# client = Client(url)
 
-try:
-    client.connect()
-    print("Connected to Kepware OPC UA Server")
-except Exception as e:
-    print(f"Failed to connect to OPC UA Server: {e}")
-    exit()
+# try:
+#     client.connect()
+#     print("Connected to Kepware OPC UA Server")
+# except Exception as e:
+#     print(f"Failed to connect to OPC UA Server: {e}")
+#     exit()
 
-D1_node = client.get_node("ns=2;s=Channel1.Device1.D1")
-D2_node = client.get_node("ns=2;s=Channel1.Device1.D2")
-D4_node = client.get_node("ns=2;s=Channel1.Device1.D4")
-D5_node = client.get_node("ns=2;s=Channel1.Device1.D5")
+# D1_node = client.get_node("ns=2;s=Channel1.Device1.D1")
+# D2_node = client.get_node("ns=2;s=Channel1.Device1.D2")
+# D4_node = client.get_node("ns=2;s=Channel1.Device1.D4")
+# D5_node = client.get_node("ns=2;s=Channel1.Device1.D5")
 
-# Cập nhật giá trị ban đầu cho D1 và D5
-try:
-    D5_node.set_value(ua.DataValue(ua.Variant(6400, ua.VariantType.UInt16)))
-    D1_node.set_value(ua.DataValue(ua.Variant(6400, ua.VariantType.UInt16)))
-except Exception as e:
-    print(f"Failed to set value for D1 and D5: {e}")
+# # Cập nhật giá trị ban đầu cho D1 và D5
+# try:
+#     D5_node.set_value(ua.DataValue(ua.Variant(6400, ua.VariantType.UInt16)))
+#     D1_node.set_value(ua.DataValue(ua.Variant(6400, ua.VariantType.UInt16)))
+# except Exception as e:
+#     print(f"Failed to set value for D1 and D5: {e}")
 
 # --------------------------- Khởi tạo Camera và Mô hình YOLO ---------------------------
 rtsp_url = "rtsp://admin:123456789tung@192.168.0.110:554/ch1/main"
@@ -132,10 +132,10 @@ def process_frame():
             opc_center_x = clamp(center_x * 100)
             opc_center_y = clamp(center_y * 100)
 
-            D2_node.set_value(ua.DataValue(ua.Variant(
-                opc_center_x, ua.VariantType.UInt16)))
-            D4_node.set_value(ua.DataValue(ua.Variant(
-                opc_center_y, ua.VariantType.UInt16)))
+            # D2_node.set_value(ua.DataValue(ua.Variant(
+            #     opc_center_x, ua.VariantType.UInt16)))
+            # D4_node.set_value(ua.DataValue(ua.Variant(
+            #     opc_center_y, ua.VariantType.UInt16)))
 
             if show_bounding_box:
                 cv2.rectangle(frame, (x_min, y_min),
@@ -165,10 +165,10 @@ def process_frame():
                 print(f"Captured image at {filename}")
 
         else:
-            D2_node.set_value(ua.DataValue(
-                ua.Variant(0, ua.VariantType.UInt16)))
-            D4_node.set_value(ua.DataValue(
-                ua.Variant(0, ua.VariantType.UInt16)))
+            # D2_node.set_value(ua.DataValue(
+            #     ua.Variant(0, ua.VariantType.UInt16)))
+            # D4_node.set_value(ua.DataValue(
+            #     ua.Variant(0, ua.VariantType.UInt16)))
 
             cv2.circle(frame, (center_x, center_y), 60, (0, 0, 255), 2)
             cv2.circle(frame, (center_x, center_y), 15, (0, 0, 255), -1)
