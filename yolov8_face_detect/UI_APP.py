@@ -1,70 +1,60 @@
 import cv2
 import time
-import threading
 from ultralytics import YOLO
-from opcua import Client, ua
 import tkinter as tk
-from tkinter import messagebox, filedialog  # Thêm filedialog
-
-# --------------------------- Kết nối OPC UA ---------------------------
-# url = "opc.tcp://127.0.0.1:49320"
-# client = Client(url)
-
-# try:
-#     client.connect()
-#     print("Connected to Kepware OPC UA Server")
-# except Exception as e:
-#     print(f"Failed to connect to OPC UA Server: {e}")
-#     exit()
-
-# D1_node = client.get_node("ns=2;s=Channel1.Device1.D1")
-# D2_node = client.get_node("ns=2;s=Channel1.Device1.D2")
-# D4_node = client.get_node("ns=2;s=Channel1.Device1.D4")
-# D5_node = client.get_node("ns=2;s=Channel1.Device1.D5")
-
-# # Cập nhật giá trị ban đầu cho D1 và D5
-# try:
-#     D5_node.set_value(ua.DataValue(ua.Variant(6400, ua.VariantType.UInt16)))
-#     D1_node.set_value(ua.DataValue(ua.Variant(6400, ua.VariantType.UInt16)))
-# except Exception as e:
-#     print(f"Failed to set value for D1 and D5: {e}")
+from tkinter import filedialog
+from PIL import Image, ImageTk
+import os
 
 # --------------------------- Khởi tạo Camera và Mô hình YOLO ---------------------------
-rtsp_url = "rtsp://admin:123456789tung@192.168.0.110:554/ch1/main"
+# Mở camera (camera mặc định là 0)
 cam = cv2.VideoCapture(0)
-model = YOLO(r"C:\Users\magic\Desktop\ĐỒ ÁN TỐT NGHIỆP\Face_Distance_Measurement\yolov8_face_detect\yolov8n-face.pt").to('cuda')
 
-# --------------------------- Hàm tiện ích ---------------------------
-
-
-def clamp(value, min_value=0, max_value=65535):
-    return max(min_value, min(value, max_value))
-
+# Tải mô hình YOLO (đường dẫn đến file mô hình) và chuyển sang sử dụng GPU ('cuda')
+model = YOLO(
+    r"D:\Face_Distance_Measurement\yolov8_face_detect\yolov8n-face.pt").to('cuda')
 
 # --------------------------- Biến và cấu hình ---------------------------
+# Định nghĩa kích thước khung hình hiển thị
 width, height = 800, 600
-prev_time = 0
-is_face_detection_on = True
-show_bounding_box = True
-auto_capture = False
-capture_directory = ""  # Biến lưu trữ thư mục chụp ảnh
 
-# --------------------------- UI Setup with Tkinter ---------------------------
-root = tk.Tk()
-root.title("Camera Control Panel")
+# Biến trạng thái để điều khiển các chế độ
+is_face_detection_on = True  # Bật/Tắt nhận diện khuôn mặt
+# Chế độ hiển thị bounding box (true: nhiều đối tượng, false: chỉ đối tượng duy nhất)
+show_bounding_box = False
+auto_capture = False  # Chế độ tự động lưu ảnh
+capture_directory = ""  # Thư mục lưu ảnh
+single_object_mode = False  # Chế độ nhận diện một đối tượng cụ thể
+
+# --------------------------- Hàm chọn và mở thư mục ---------------------------
 
 # Hàm chọn thư mục lưu ảnh
 
 
 def choose_directory():
     global capture_directory
+    # Hiển thị hộp thoại chọn thư mục
     capture_directory = filedialog.askdirectory(title="Chọn thư mục lưu ảnh")
     if capture_directory:
         print(f"Ảnh sẽ được lưu tại: {capture_directory}")
+        # Nếu có thư mục, hiển thị nút mở thư mục
+        btn_open_directory.pack(side=tk.LEFT, padx=5)
+    else:
+        print("Chưa chọn thư mục lưu ảnh")
+        btn_open_directory.pack_forget()  # Nếu không chọn, ẩn nút mở thư mục
+
+# Hàm mở thư mục đã chọn
+
+
+def open_directory():
+    if capture_directory:
+        os.startfile(capture_directory)  # Mở thư mục trên hệ điều hành Windows
     else:
         print("Chưa chọn thư mục lưu ảnh")
 
-# Các nút điều khiển
+# --------------------------- Các hàm bật/tắt các chế độ ---------------------------
+
+# Bật/Tắt chế độ nhận diện khuôn mặt
 
 
 def toggle_face_detection():
@@ -72,13 +62,26 @@ def toggle_face_detection():
     is_face_detection_on = not is_face_detection_on
     status = "ON" if is_face_detection_on else "OFF"
     print(f"Face Detection: {status}")
+    update_button_state(btn_toggle_detection,
+                        is_face_detection_on)  # Đổi màu nút
+
+# Chuyển sang chế độ nhiều đối tượng (Bounding Box)
 
 
-def toggle_bounding_box():
+def toggle_multi_object_mode():
     global show_bounding_box
-    show_bounding_box = not show_bounding_box
-    status = "Bounding Box" if show_bounding_box else "Border"
-    print(f"Show: {status}")
+    show_bounding_box = True
+    print("Mode: Multiple Objects Mode")
+
+# Chuyển sang chế độ nhận diện một đối tượng duy nhất (Lock)
+
+
+def toggle_single_object_mode():
+    global show_bounding_box
+    show_bounding_box = False
+    print("Mode: Single Object Mode")
+
+# Bật/Tắt chế độ tự động lưu ảnh
 
 
 def toggle_auto_capture():
@@ -86,119 +89,172 @@ def toggle_auto_capture():
     auto_capture = not auto_capture
     status = "ON" if auto_capture else "OFF"
     print(f"Auto Capture: {status}")
+    update_button_state(btn_toggle_capture, auto_capture)  # Đổi màu nút
+
+# Cập nhật trạng thái nút (màu sắc tùy theo trạng thái bật/tắt)
 
 
-# Nút chọn thư mục lưu ảnh
-btn_choose_directory = tk.Button(
-    root, text="Chọn thư mục lưu ảnh", command=choose_directory)
-btn_choose_directory.pack(pady=10)
+def update_button_state(button, is_active):
+    if is_active:
+        button.config(bg="green", fg="white")  # Màu xanh khi bật
+    else:
+        # Màu mặc định khi tắt
+        button.config(bg="SystemButtonFace", fg="black")
 
+
+# --------------------------- UI Setup với Tkinter ---------------------------
+# Tạo cửa sổ giao diện
+root = tk.Tk()
+root.title("Camera Nhận Diện Đối Tượng")
+
+# Canvas để hiển thị video
+canvas = tk.Canvas(root, width=width, height=height)
+canvas.pack()
+
+# Frame chứa các nút điều khiển
+button_frame = tk.Frame(root)
+button_frame.pack(fill=tk.X, pady=10)
+
+# Tạo các nút điều khiển
 btn_toggle_detection = tk.Button(
-    root, text="Toggle Face Detection", command=toggle_face_detection)
-btn_toggle_detection.pack(pady=10)
+    button_frame, text="Bật/Tắt nhận diện", command=toggle_face_detection)
+btn_toggle_detection.pack(side=tk.LEFT, padx=5)
 
 btn_toggle_bounding = tk.Button(
-    root, text="Toggle Bounding Box/Border", command=toggle_bounding_box)
-btn_toggle_bounding.pack(pady=10)
+    button_frame, text="Chế độ nhiều đối tượng (Bounding Box)", command=toggle_multi_object_mode)
+btn_toggle_bounding.pack(side=tk.LEFT, padx=5)
+
+btn_toggle_single_object_mode = tk.Button(
+    button_frame, text="Chế độ 1 đối tượng (Lock)", command=toggle_single_object_mode)
+btn_toggle_single_object_mode.pack(side=tk.LEFT, padx=5)
+
+btn_choose_directory = tk.Button(
+    button_frame, text="Chọn thư mục lưu ảnh", command=choose_directory)
+btn_choose_directory.pack(side=tk.LEFT, padx=5)
+
+btn_open_directory = tk.Button(
+    button_frame, text="Mở thư mục lưu ảnh", command=open_directory)
 
 btn_toggle_capture = tk.Button(
-    root, text="Toggle Auto Capture", command=toggle_auto_capture)
-btn_toggle_capture.pack(pady=10)
+    button_frame, text="Bật/Tắt lưu ảnh", command=toggle_auto_capture)
+btn_toggle_capture.pack(side=tk.LEFT, padx=5)
 
-# --------------------------- Hàm chính (vòng lặp OpenCV + Tkinter) ---------------------------
+# Cập nhật trạng thái ban đầu cho nút
+update_button_state(btn_toggle_capture, auto_capture)
+update_button_state(btn_toggle_detection, is_face_detection_on)
+
+# --------------------------- Hàm xử lý video ---------------------------
+
+# Hàm giới hạn giá trị (clamp) trong khoảng min và max
+
+
+def clamp(value, min_value=0, max_value=65535):
+    return max(min_value, min(value, max_value))
+
+# Hàm xử lý từng khung hình (frame)
 
 
 def process_frame():
-    global prev_time, is_face_detection_on, show_bounding_box, auto_capture, capture_directory
-    suc, frame = cam.read()  # Đọc một frame từ camera
+    prev_time = time.time()  # Lấy thời gian bắt đầu
+    global is_face_detection_on, show_bounding_box, auto_capture, capture_directory, single_object_mode
+
+    # Đọc khung hình từ camera
+    suc, frame = cam.read()
     if not suc:
-        print("No image")
         return
 
-    frame = cv2.resize(frame, (width, height))  # Resize frame
+    # Resize khung hình theo kích thước đã định
+    frame = cv2.resize(frame, (width, height))
 
+    # Khởi tạo tọa độ trung tâm mặc định
+    center_x, center_y = width // 2, height // 2
+    face_count = 0  # Đếm số khuôn mặt nhận diện được
+
+    # Nếu nhận diện khuôn mặt được bật
     if is_face_detection_on:
+        # Chạy mô hình YOLO trên khung hình
         results = model(frame, verbose=False)
 
-        center_x, center_y = width // 2, height // 2
-
+        # Nếu phát hiện được đối tượng
         if results and len(results[0].boxes) > 0:
-            box = results[0].boxes[0]
-            x_min, y_min, x_max, y_max = map(int, box.xyxy[0])
+            if show_bounding_box:  # Chế độ nhiều đối tượng
+                for box in results[0].boxes:
+                    x_min, y_min, x_max, y_max = map(int, box.xyxy[0])
+                    center_x = int((x_min + x_max) / 2)
+                    center_y = int((y_min + y_max) / 2)
 
-            center_x = (x_min + x_max) // 2
-            center_y = (y_min + y_max) // 2
+                    opc_center_x = clamp(center_x * 100)
+                    opc_center_y = clamp(center_y * 100)
 
-            opc_center_x = clamp(center_x * 100)
-            opc_center_y = clamp(center_y * 100)
+                    # Vẽ bounding box
+                    cv2.rectangle(frame, (x_min, y_min),
+                                  (x_max, y_max), (0, 255, 0), 2)
+                    face_count += 1
 
-            # D2_node.set_value(ua.DataValue(ua.Variant(
-            #     opc_center_x, ua.VariantType.UInt16)))
-            # D4_node.set_value(ua.DataValue(ua.Variant(
-            #     opc_center_y, ua.VariantType.UInt16)))
+            elif not show_bounding_box:  # Chế độ một đối tượng
+                box = results[0].boxes[0]
+                x_min, y_min, x_max, y_max = map(int, box.xyxy[0])
+                center_x = int((x_min + x_max) / 2)
+                center_y = int((y_min + y_max) / 2)
 
-            if show_bounding_box:
-                cv2.rectangle(frame, (x_min, y_min),
-                              (x_max, y_max), (0, 255, 0), 2)
-            else:
+                # Hiển thị tọa độ trung tâm và vẽ các đường/circle
+                opc_center_x = clamp(center_x * 100)
+                opc_center_y = clamp(center_y * 100)
+
+                cv2.putText(frame, f'Center: ({opc_center_x}, {opc_center_y})', (center_x + 10, center_y - 10),
+                            cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 255, 0), 2)
                 cv2.line(frame, (0, center_y), (width, center_y), (0, 0, 0), 2)
                 cv2.line(frame, (center_x, 0),
                          (center_x, height), (0, 0, 0), 2)
                 cv2.circle(frame, (center_x, center_y), 60, (0, 0, 255), 2)
                 cv2.circle(frame, (center_x, center_y), 15, (0, 0, 255), -1)
-                cv2.putText(frame, f'Center: ({opc_center_x}, {opc_center_y})', (center_x + 10, center_y - 10),
-                            cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 255, 0), 2)
                 cv2.putText(frame, "X+", (10, center_y + 20),
                             cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
                 cv2.putText(frame, "X-", (width - 30, center_y + 20),
                             cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
-                # Hiển thị ký hiệu "Y+" và "Y-" cho trục Y
                 cv2.putText(frame, "Y+", (center_x + 10, 30),
                             cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
                 cv2.putText(frame, "Y-", (center_x + 10, height - 10),
                             cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
+                face_count += 1
 
-            if auto_capture and capture_directory:  # Chỉ lưu nếu đã chọn thư mục
-                timestamp = time.time()
-                filename = f"{capture_directory}/captured_face_{timestamp}.jpg"
-                cv2.imwrite(filename, frame)
-                print(f"Captured image at {filename}")
+        # Hiển thị số lượng đối tượng trên màn hình
+        cv2.putText(frame, f"DOI TUONG: {face_count}", (10, 70),
+                    cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 3)
+        if face_count == 0:
+            cv2.putText(frame, "khong thay doi tuong", (width // 3, height // 2),
+                        cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2)
 
-        else:
-            # D2_node.set_value(ua.DataValue(
-            #     ua.Variant(0, ua.VariantType.UInt16)))
-            # D4_node.set_value(ua.DataValue(
-            #     ua.Variant(0, ua.VariantType.UInt16)))
+    # Lưu khung hình tự động nếu bật chế độ tự động chụp và phát hiện được đối tượng
+    if auto_capture and face_count > 0 and capture_directory:
+        timestamp = time.strftime("%d-%m-%Y_%H-%M-%S")
+        capture_path = f"{capture_directory}/capture_{timestamp}.png"
+        cv2.imwrite(capture_path, frame)
+        print(f"Đã lưu ảnh tại: {capture_path}")
 
-            cv2.circle(frame, (center_x, center_y), 60, (0, 0, 255), 2)
-            cv2.circle(frame, (center_x, center_y), 15, (0, 0, 255), -1)
-            cv2.line(frame, (0, center_y), (width, center_y), (0, 0, 0), 2)
-            cv2.line(frame, (center_x, 0), (center_x, height), (0, 0, 0), 2)
-            cv2.putText(frame, "X+", (10, center_y + 20),
-                        cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
-            cv2.putText(frame, "X-", (width - 30, center_y + 20),
-                        cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
-            cv2.putText(frame, "Y+", (center_x + 10, 30),
-                        cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
-            cv2.putText(frame, "Y-", (center_x + 10, height - 10),
-                        cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
+    # Tính FPS và hiển thị trên khung hình
+    current_time = time.time()
+    fps = 1 / (current_time - prev_time)
+    prev_time = current_time
+    cv2.putText(frame, f'FPS: {int(fps)}', (10, 30),
+                cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 3)
 
-    cv2.imshow("Frame", frame)
+    return frame
 
-# --------------------------- Vòng lặp chính ---------------------------
+# Hàm cập nhật khung hình liên tục trên giao diện
 
 
-def loop():
-    while True:
-        process_frame()
-        if cv2.waitKey(1) & 0xFF == ord('q'):
-            break
+def update_frame():
+    global canvas
+    frame = process_frame()
+    # Chuyển khung hình sang RGB
+    frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+    photo = ImageTk.PhotoImage(image=Image.fromarray(frame_rgb))
+    canvas.create_image(0, 0, image=photo, anchor=tk.NW)
+    canvas.image = photo
+    canvas.after(10, update_frame)  # Cập nhật lại sau 10ms
 
-    cam.release()
-    cv2.destroyAllWindows()
 
-
-# Chạy GUI Tkinter và vòng lặp OpenCV
-if __name__ == "__main__":
-    threading.Thread(target=loop, daemon=True).start()
-    root.mainloop()
+# Chạy vòng lặp cập nhật video
+update_frame()
+root.mainloop()

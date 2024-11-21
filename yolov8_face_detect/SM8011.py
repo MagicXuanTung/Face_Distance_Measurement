@@ -38,7 +38,6 @@ except Exception as e:
 # --------------------------- Khởi tạo Camera và Mô hình YOLO ---------------------------
 
 # Địa chỉ RTSP của camera
-rtsp_url = "rtsp://admin:123456789tung@192.168.0.110:554/ch1/main"
 cam = cv2.VideoCapture(0)  # Mở camera hoặc stream RTSP
 
 # Tải mô hình YOLOv8 để phát hiện khuôn mặt
