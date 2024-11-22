@@ -186,6 +186,10 @@ def process_frame():
                     opc_center_x = clamp(center_x * 100)
                     opc_center_y = clamp(center_y * 100)
 
+                    class_id = int(box.cls[0])  # ID của class
+                    class_name = model.names[class_id]
+                    cv2.putText(frame, class_name, (x_min, y_min - 10),
+                                cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
                     # Vẽ bounding box
                     cv2.rectangle(frame, (x_min, y_min),
                                   (x_max, y_max), (0, 255, 0), 2)
