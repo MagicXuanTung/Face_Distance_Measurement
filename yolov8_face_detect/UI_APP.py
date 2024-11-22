@@ -12,7 +12,7 @@ cam = cv2.VideoCapture(0)
 
 # Tải mô hình YOLO (đường dẫn đến file mô hình) và chuyển sang sử dụng GPU ('cuda')
 model = YOLO(
-    r"D:\Face_Distance_Measurement\yolov8_face_detect\yolov8n-face.pt").to('cuda')
+    r"C:\Users\magic\Desktop\ĐỒ ÁN TỐT NGHIỆP\Face_Distance_Measurement\yolov8_face_detect\yolov8n-face.pt").to('cuda')
 
 # --------------------------- Biến và cấu hình ---------------------------
 # Định nghĩa kích thước khung hình hiển thị
