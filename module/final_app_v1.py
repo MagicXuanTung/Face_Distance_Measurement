@@ -47,7 +47,7 @@ if not cam.isOpened():
     raise Exception("Không thể khởi động camera. Kiểm tra kết nối thiết bị!")
 
 # Tải mô hình YOLO và chuyển sang sử dụng GPU ('cuda')
-model_path = r"D:\Face_Distance_Measurement\yolov8_face_detect\yolov8n-face.pt"
+model_path = r"C:\Users\magic\Desktop\ĐỒ ÁN TỐT NGHIỆP\Face_Distance_Measurement\yolov8_face_detect\yolov8n-face.pt"
 model = YOLO(model_path).to('cuda')
 
 # --------------------------- Biến và cấu hình ---------------------------
