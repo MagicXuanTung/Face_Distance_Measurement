@@ -9,6 +9,35 @@ import tkinter as tk
 from tkinter import filedialog, messagebox
 from PIL import Image, ImageTk
 import os
+from opcua_client import OPCUAClient
+
+opcua_url = "opc.tcp://127.0.0.1:49320"
+opcua_client = OPCUAClient(opcua_url)
+
+# Kết nối OPC UA
+opcua_client.connect()
+
+# Lấy các node cần thiết
+D1_node = opcua_client.get_node("ns=2;s=Channel1.Device1.D1")
+D2_node = opcua_client.get_node("ns=2;s=Channel1.Device1.D2")
+D4_node = opcua_client.get_node("ns=2;s=Channel1.Device1.D4")
+D5_node = opcua_client.get_node("ns=2;s=Channel1.Device1.D5")
+
+# Set giá trị ban đầu
+opcua_client.set_value(D1_node, 6400)
+opcua_client.set_value(D5_node, 6400)
+
+try:
+    # Ghi giá trị 6400 vào D5
+    opcua_client.set_value(D1_node, 6400)
+    opcua_client.set_value(D5_node, 6400)
+except Exception as e:
+    # Thông báo nếu có lỗi khi ghi giá trị
+    print(f"Failed to set value for D1 and D5: {e}")
+
+
+def clamp(value, min_value=0, max_value=65535):
+    return max(min_value, min(value, max_value))
 
 
 # --------------------------- Khởi tạo Camera và Mô hình YOLO ---------------------------
@@ -190,6 +219,11 @@ def process_frame():
                 opc_center_x = clamp(center_x * 100)
                 opc_center_y = clamp(center_y * 100)
 
+                print(
+                    f"Tọa độ gửi qua OPC UA: ({opc_center_x}, {opc_center_y})")
+                opcua_client.set_value(D2_node, opc_center_x)
+                opcua_client.set_value(D4_node, opc_center_y)
+
                 cv2.putText(frame, f'Center: ({opc_center_x}, {opc_center_y})', (center_x + 10, center_y - 10),
                             cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 255, 0), 2)
                 cv2.line(frame, (0, center_y), (width, center_y), (0, 0, 0), 2)
@@ -213,6 +247,8 @@ def process_frame():
         cv2.putText(frame, f"DOI TUONG: {face_count}", (10, 70),
                     cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 3)
         if face_count == 0:
+            opcua_client.set_value(D2_node, 0)
+            opcua_client.set_value(D4_node, 0)
             cv2.putText(frame, "khong thay doi tuong", (width // 3, height // 2),
                         cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2)
 
