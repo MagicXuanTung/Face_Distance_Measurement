@@ -7,6 +7,7 @@ from telegram import Bot
 from ultralytics import YOLO
 import tkinter as tk
 from tkinter import filedialog, messagebox
+from tkinter import ttk
 from PIL import Image, ImageTk
 import os
 
@@ -18,8 +19,8 @@ if not cam.isOpened():
     raise Exception("Không thể khởi động camera. Kiểm tra kết nối thiết bị!")
 
 # Tải mô hình YOLO và chuyển sang sử dụng GPU ('cuda')
-model_path = r"C:\Users\magic\Desktop\ĐỒ ÁN TỐT NGHIỆP\Face_Distance_Measurement\yolov8_face_detect\yolov8n-face.pt"
-model = YOLO(model_path).to('cuda')
+model_path = r"D:\Face_Distance_Measurement\yolov8_face_detect\yolov8n-face.pt"
+model = YOLO(model_path)
 
 # --------------------------- Biến và cấu hình ---------------------------
 width, height = 800, 600
@@ -37,6 +38,17 @@ TOKEN = '7722510055:AAGW2PSNYdClv69vE0Rnj92StKP500xFeOE'
 CHAT_ID = '-4755156196'
 
 # --------------------------- Hàm xử lý ---------------------------
+
+
+def toggle_device(event):
+    """Chuyển đổi giữa GPU và CPU."""
+    device = device_var.get()
+    if device == 'GPU':
+        model.to('cuda')  # Chuyển sang sử dụng GPU
+        print("Sử dụng GPU")
+    else:
+        model.to('cpu')  # Chuyển sang sử dụng CPU
+        print("Sử dụng CPU")
 
 
 def toggle_multi_object_mode():
@@ -256,6 +268,15 @@ canvas.pack()
 # Frame chứa các nút điều khiển
 button_frame = tk.Frame(root)
 button_frame.pack(fill=tk.X, pady=10)
+#
+device_var = tk.StringVar()
+device_var.set('GPU')  # Mặc định chọn GPU
+
+# Tạo combobox cho lựa chọn CPU hoặc GPU
+device_combobox = ttk.Combobox(root, textvariable=device_var, values=[
+                               'GPU', 'CPU'], state="readonly")
+device_combobox.pack(pady=10)
+device_combobox.bind("<<ComboboxSelected>>", toggle_device)
 
 # Tạo các nút điều khiển
 btn_toggle_detection = tk.Button(
