@@ -27,6 +27,7 @@ else:
     # Đang chạy từ nguồn Python (trong môi trường phát triển)
     model_path = os.path.join(os.path.dirname(__file__), "yolov8n-face.pt")
 model = YOLO(model_path)
+device = 'cuda' if torch.cuda.is_available() else 'cpu'
 model.to(device)
 # --------------------------- Biến và cấu hình ---------------------------
 width, height = 640, 480
