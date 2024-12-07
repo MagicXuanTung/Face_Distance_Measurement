@@ -20,15 +20,18 @@ if not cam.isOpened():
     raise Exception("Không thể khởi động camera. Kiểm tra kết nối thiết bị!")
 
 # Tải mô hình YOLO và chuyển sang sử dụng GPU ('cuda') nếu có
-device = 'cuda' if torch.cuda.is_available() else 'cpu'
-model_path = os.path.join(os.path.dirname(__file__), "yolov8n-face.pt")
+if getattr(sys, 'frozen', False):
+    # Đang chạy từ tệp .exe (sau khi đóng gói)
+    model_path = os.path.join(sys._MEIPASS, "yolov8n-face.pt")
+else:
+    # Đang chạy từ nguồn Python (trong môi trường phát triển)
+    model_path = os.path.join(os.path.dirname(__file__), "yolov8n-face.pt")
 model = YOLO(model_path)
 model.to(device)
 # --------------------------- Biến và cấu hình ---------------------------
 width, height = 640, 480
 is_face_detection_on = True
 show_bounding_box = False
-
 auto_capture = False
 capture_directory = ""
 is_message_sending_on = False
@@ -41,13 +44,6 @@ TOKEN = '7722510055:AAGW2PSNYdClv69vE0Rnj92StKP500xFeOE'
 CHAT_ID = '-4755156196'
 
 # --------------------------- Hàm xử lý ---------------------------
-
-if getattr(sys, 'frozen', False):
-    # Đang chạy từ tệp .exe (sau khi đóng gói)
-    model_path = os.path.join(sys._MEIPASS, "yolov8n-face.pt")
-else:
-    # Đang chạy từ nguồn Python (trong môi trường phát triển)
-    model_path = os.path.join(os.path.dirname(__file__), "yolov8n-face.pt")
 
 
 def toggle_device(event):
