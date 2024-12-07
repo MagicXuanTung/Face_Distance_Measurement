@@ -1,9 +1,11 @@
 import asyncio
+import sys
 import tempfile
 import threading
 import cv2
 import time
 from telegram import Bot
+import torch
 from ultralytics import YOLO
 import tkinter as tk
 from tkinter import filedialog, messagebox
@@ -11,21 +13,22 @@ from tkinter import ttk
 from PIL import Image, ImageTk
 import os
 
-
 # --------------------------- Khởi tạo Camera và Mô hình YOLO ---------------------------
 # Mở camera (camera mặc định là 0)
 cam = cv2.VideoCapture(0)
 if not cam.isOpened():
     raise Exception("Không thể khởi động camera. Kiểm tra kết nối thiết bị!")
 
-# Tải mô hình YOLO và chuyển sang sử dụng GPU ('cuda')
-model_path = r"D:\Face_Distance_Measurement\yolov8_face_detect\yolov8n-face.pt"
+# Tải mô hình YOLO và chuyển sang sử dụng GPU ('cuda') nếu có
+device = 'cuda' if torch.cuda.is_available() else 'cpu'
+model_path = os.path.join(os.path.dirname(__file__), "yolov8n-face.pt")
 model = YOLO(model_path)
-
+model.to(device)
 # --------------------------- Biến và cấu hình ---------------------------
-width, height = 800, 600
+width, height = 640, 480
 is_face_detection_on = True
 show_bounding_box = False
+
 auto_capture = False
 capture_directory = ""
 is_message_sending_on = False
@@ -39,16 +42,31 @@ CHAT_ID = '-4755156196'
 
 # --------------------------- Hàm xử lý ---------------------------
 
+if getattr(sys, 'frozen', False):
+    # Đang chạy từ tệp .exe (sau khi đóng gói)
+    model_path = os.path.join(sys._MEIPASS, "yolov8n-face.pt")
+else:
+    # Đang chạy từ nguồn Python (trong môi trường phát triển)
+    model_path = os.path.join(os.path.dirname(__file__), "yolov8n-face.pt")
+
 
 def toggle_device(event):
     """Chuyển đổi giữa GPU và CPU."""
-    device = device_var.get()
-    if device == 'GPU':
-        model.to('cuda')  # Chuyển sang sử dụng GPU
-        print("Sử dụng GPU")
+    global device
+    selected_device = device_var.get()
+    if selected_device == 'GPU':
+        if torch.cuda.is_available():
+            device = 'cuda'
+            model.to(device)
+            print("Sử dụng GPU.")
+        else:
+            messagebox.showwarning(
+                "Cảnh báo", "CUDA không khả dụng! Sử dụng CPU thay thế.")
+            device_var.set('CPU')
     else:
-        model.to('cpu')  # Chuyển sang sử dụng CPU
-        print("Sử dụng CPU")
+        device = 'cpu'
+        model.to(device)
+        print("Sử dụng CPU.")
 
 
 def toggle_multi_object_mode():
@@ -268,9 +286,10 @@ canvas.pack()
 # Frame chứa các nút điều khiển
 button_frame = tk.Frame(root)
 button_frame.pack(fill=tk.X, pady=10)
-#
+
 device_var = tk.StringVar()
-device_var.set('GPU')  # Mặc định chọn GPU
+# Mặc định dựa vào khả năng của hệ thống
+device_var.set('GPU' if device == 'cuda' else 'CPU')
 
 # Tạo combobox cho lựa chọn CPU hoặc GPU
 device_combobox = ttk.Combobox(root, textvariable=device_var, values=[
